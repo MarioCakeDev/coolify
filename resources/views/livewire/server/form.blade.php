@@ -76,11 +76,11 @@
             </div>
             <div class="w-full" x-data="{
                 open: false,
-                search: '{{ $server->settings->server_timezone ?: '' }}',
+                searchTimezone: '{{ $server->settings->server_timezone ?: '' }}',
                 timezones: @js($timezones),
                 placeholder: '{{ $server->settings->server_timezone ? 'Search timezone...' : 'Select Server Timezone' }}',
                 init() {
-                    this.$watch('search', value => {
+                    this.$watch('searchTimezone', value => {
                         if (value === '') {
                             this.open = true;
                         }
@@ -95,7 +95,7 @@
                 <div class="relative">
                     <div class="inline-flex relative items-center w-64">
                         <input autocomplete="off" wire:dirty.class.remove='dark:focus:ring-coolgray-300 dark:ring-coolgray-300'
-                            wire:dirty.class="dark:focus:ring-warning dark:ring-warning" x-model="search"
+                            wire:dirty.class="dark:focus:ring-warning dark:ring-warning" x-model="searchTimezone"
                             @focus="open = true" @click.away="open = false" @input="open = true" class="w-full input"
                             :placeholder="placeholder" wire:model.debounce.300ms="server.settings.server_timezone">
                         <svg class="absolute right-0 mr-2 w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none"
@@ -107,9 +107,9 @@
                     <div x-show="open"
                         class="overflow-auto overflow-x-hidden absolute z-50 mt-1 w-64 max-h-60 bg-white rounded-md border shadow-lg dark:bg-coolgray-100 dark:border-coolgray-200 scrollbar">
                         <template
-                            x-for="timezone in timezones.filter(tz => tz.toLowerCase().includes(search.toLowerCase()))"
+                            x-for="timezone in timezones.filter(tz => tz.toLowerCase().includes(searchTimezone.toLowerCase()))"
                             :key="timezone">
-                            <div @click="search = timezone; open = false; $wire.set('server.settings.server_timezone', timezone)"
+                            <div @click="searchTimezone = timezone; open = false; $wire.set('server.settings.server_timezone', timezone)"
                                 class="px-4 py-2 text-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-coolgray-300 dark:text-gray-200"
                                 x-text="timezone"></div>
                         </template>
@@ -256,6 +256,57 @@
                     </div>
                 </div>
 
+                <!-- Automatic dns records, Type of DNS Record (e.g. A, AAAA, CNAME) and value which should be set -->
+                <!-- Also need a dropdown for the dns provider (e.g. Cloudflare, Google, etc.) -->
+                <div class="flex flex-wrap gap-4 sm:flex-nowrap">
+                    <x-forms.input id="server.settings.dns_records" label="DNS Records Type" required
+                        helper="You can specify the type of DNS records to be set (e.g. A, AAAA, CNAME)." />
+                    <x-forms.input id="server.settings.dns_records_value" label="DNS Records Value" required
+                        helper="You can specify the value of the DNS records to be set." />
+
+                    <div class="w-full" x-data="{
+                        open: false,
+                        search: '{{ $server->settings->dns_provider_id ?: '' }}',
+                        dns_provider: @js($dns_provider),
+                        placeholder: '{{ $dns_provider ? 'Select DNS Provider' : 'Create DNS Provider...' }}',
+                        init() {
+                            this.$watch('search', value => {
+                                if (value === '') {
+                                    this.open = true;
+                                }
+                            })
+                        }
+                    }">
+                        <div class="flex items-center mb-1">
+                            <label for="server.settings.dns_provider_id">DNS Provider</label>
+                            <x-helper class="ml-2" helper="DNS Provider which should be used to set DNS records." />
+                        </div>
+                        <div class="relative">
+                            <div class="inline-flex relative items-center w-64">
+                                <input autocomplete="off" wire:dirty.class.remove='dark:focus:ring-coolgray-300 dark:ring-coolgray-300'
+                                       wire:dirty.class="dark:focus:ring-warning dark:ring-warning" x-model="search"
+                                       @focus="open = true" @click.away="open = false" @input="open = true" class="w-full input"
+                                       :placeholder="placeholder" wire:model.debounce.300ms="server.settings.dns_provider_id">
+                                <svg class="absolute right-0 mr-2 w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                     viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" @click="open = true">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+                                </svg>
+                            </div>
+                            <div x-show="open"
+                                 class="overflow-auto overflow-x-hidden absolute z-50 mt-1 w-64 max-h-60 bg-white rounded-md border shadow-lg dark:bg-coolgray-100 dark:border-coolgray-200 scrollbar">
+                                <template
+                                    x-for="dns_provider_id in dns_provider.filter(provider => provider.toLowerCase().includes(search.toLowerCase()))"
+                                    :key="dns_provider_id">
+                                    <div @click="search = dns_provider_id; open = false; $wire.set('server.settings.dns_provider_id', dns_provider_id)"
+                                         class="px-4 py-2 text-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-coolgray-300 dark:text-gray-200"
+                                         x-text="dns_provider_id"></div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
                 <div class="flex flex-wrap gap-4 sm:flex-nowrap">
                     <x-forms.input id="server.settings.concurrent_builds" label="Number of concurrent builds" required
                         helper="You can specify the number of simultaneous build processes/deployments that should run concurrently." />
