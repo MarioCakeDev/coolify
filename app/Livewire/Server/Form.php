@@ -261,7 +261,6 @@ class Form extends Component
             $newTimezone = $this->server->settings->server_timezone;
             if ($currentTimezone !== $newTimezone || $currentTimezone === '') {
                 $this->server->settings->server_timezone = $newTimezone;
-                $this->server->settings->save();
             }
 
             $this->server->settings->dns_provider_id = $this->server->settings->dns_provider_id;
