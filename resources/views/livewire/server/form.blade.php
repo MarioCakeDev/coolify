@@ -256,8 +256,10 @@
                     </div>
                 </div>
 
-                <!-- Automatic dns records, Type of DNS Record (e.g. A, AAAA, CNAME) and value which should be set -->
-                <!-- Also need a dropdown for the dns provider (e.g. Cloudflare, Google, etc.) -->
+                <h2>Dns records</h2>
+                <x-modal-input :closeOutside="false" buttonTitle="+ Add" title="Add new dns record">
+                    <livewire:server.dns-record.add :server="$server" />
+                </x-modal-input>
                 <div class="flex flex-wrap gap-4 sm:flex-nowrap">
                     <x-forms.input id="server.settings.dns_records" label="DNS Records Type" required
                         helper="You can specify the type of DNS records to be set (e.g. A, AAAA, CNAME)." />
@@ -266,11 +268,11 @@
 
                     <div class="w-full" x-data="{
                         open: false,
-                        search: '{{ $server->settings->dns_provider_id ?: '' }}',
-                        dns_provider: @js($dns_provider),
-                        placeholder: '{{ $dns_provider ? 'Select DNS Provider' : 'Create DNS Provider...' }}',
+                        searchDnsProvider: '{{ $dns_provider_name }}',
+                        dnsProviders: @js($dns_providers),
+                        placeholder: '{{ $dns_providers ? 'Select DNS Provider' : 'Create DNS Provider...' }}',
                         init() {
-                            this.$watch('search', value => {
+                            this.$watch('searchDnsProvider', value => {
                                 if (value === '') {
                                     this.open = true;
                                 }
@@ -284,9 +286,10 @@
                         <div class="relative">
                             <div class="inline-flex relative items-center w-64">
                                 <input autocomplete="off" wire:dirty.class.remove='dark:focus:ring-coolgray-300 dark:ring-coolgray-300'
-                                       wire:dirty.class="dark:focus:ring-warning dark:ring-warning" x-model="search"
+                                       wire:dirty.class="dark:focus:ring-warning dark:ring-warning" x-model="searchDnsProvider"
                                        @focus="open = true" @click.away="open = false" @input="open = true" class="w-full input"
-                                       :placeholder="placeholder" wire:model.debounce.300ms="server.settings.dns_provider_id">
+                                       :placeholder="placeholder" :value="searchDnsProvider">
+                                <input hidden="true" wire:model.debounce.300ms="server.settings.dns_provider_id">
                                 <svg class="absolute right-0 mr-2 w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none"
                                      viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" @click="open = true">
                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -296,11 +299,11 @@
                             <div x-show="open"
                                  class="overflow-auto overflow-x-hidden absolute z-50 mt-1 w-64 max-h-60 bg-white rounded-md border shadow-lg dark:bg-coolgray-100 dark:border-coolgray-200 scrollbar">
                                 <template
-                                    x-for="dns_provider_id in dns_provider.filter(provider => provider.toLowerCase().includes(search.toLowerCase()))"
-                                    :key="dns_provider_id">
-                                    <div @click="search = dns_provider_id; open = false; $wire.set('server.settings.dns_provider_id', dns_provider_id)"
+                                    x-for="dns_provider in dnsProviders.filter(provider => provider.name.toLowerCase().includes(searchDnsProvider.toLowerCase()))"
+                                    :key="dns_provider.name">
+                                    <div @click="searchDnsProvider = dns_provider.name; open = false; $wire.set('server.settings.dns_provider_id', dns_provider.id)"
                                          class="px-4 py-2 text-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-coolgray-300 dark:text-gray-200"
-                                         x-text="dns_provider_id"></div>
+                                         x-text="dns_provider.name"></div>
                                 </template>
                             </div>
                         </div>

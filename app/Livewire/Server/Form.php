@@ -6,6 +6,7 @@ use App\Actions\Server\StartSentinel;
 use App\Actions\Server\StopSentinel;
 use App\Jobs\DockerCleanupJob;
 use App\Jobs\PullSentinelImageJob;
+use App\Models\DnsProvider;
 use App\Models\Server;
 use Livewire\Component;
 
@@ -25,7 +26,9 @@ class Form extends Component
 
     public $timezones;
 
-    public $dns_provider;
+    public $dns_providers;
+
+    public $dns_provider_name;
 
     public $delete_unused_volumes = false;
 
@@ -62,7 +65,7 @@ class Form extends Component
         'wildcard_domain' => 'nullable|url',
         'server.settings.is_server_api_enabled' => 'required|boolean',
         'server.settings.server_timezone' => 'required|string|timezone',
-        'server.settings.dns_provider_id' => 'required|string',
+        'server.settings.dns_provider_id' => 'string',
         'server.settings.force_docker_cleanup' => 'required|boolean',
         'server.settings.docker_cleanup_frequency' => 'required_if:server.settings.force_docker_cleanup,true|string',
         'server.settings.docker_cleanup_threshold' => 'required_if:server.settings.force_docker_cleanup,false|integer|min:1|max:100',
@@ -98,7 +101,15 @@ class Form extends Component
     {
         $this->server = $server;
         $this->timezones = collect(timezone_identifiers_list())->sort()->values()->toArray();
-        $this->dns_provider = ['cloudflare', 'google', 'route53', 'manual'];
+        $this->dns_providers = DnsProvider::all()->map(function ($dns_provider) {
+            return [
+                'id' => $dns_provider->id,
+                'name' => $dns_provider->name,
+            ];
+        });
+        $this->dns_provider_name = $this->server->settings->dns_provider_id ? $this->dns_providers->first(function ($p) {
+            return $p['id'] === $this->server->settings->dns_provider_id;
+        })['name'] : '';
         $this->wildcard_domain = $this->server->settings->wildcard_domain;
         $this->server->settings->docker_cleanup_threshold = $this->server->settings->docker_cleanup_threshold;
         $this->server->settings->docker_cleanup_frequency = $this->server->settings->docker_cleanup_frequency;
@@ -268,6 +279,13 @@ class Form extends Component
         $this->server->settings->server_timezone = $value;
         $this->server->settings->save();
         $this->dispatch('success', 'Server timezone updated.');
+    }
+
+    public function updatedServerSettingsDnsProviderId($value)
+    {
+        $this->server->settings->dns_provider_id = $value;
+        $this->server->settings->save();
+        $this->dispatch('success', 'Server DNS Provider updated.');
     }
 
     public function manualCleanup()
