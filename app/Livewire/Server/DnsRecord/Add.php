@@ -21,7 +21,8 @@ class Add extends Component
 
     public function render()
     {
-        return view('livewire.server.dns-records.add', [
+        return view('livewire.server.dns-record.add', [
+            'dns_providers' => $this->dns_providers,
         ]);
     }
 }

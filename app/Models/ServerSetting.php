@@ -42,7 +42,6 @@ use OpenApi\Attributes as OA;
         'docker_cleanup_threshold' => ['type' => 'integer'],
         'server_id' => ['type' => 'integer'],
         'wildcard_domain' => ['type' => 'string'],
-        'dns_provider_id' => ['type' => 'string'],
         'created_at' => ['type' => 'string'],
         'updated_at' => ['type' => 'string'],
     ]

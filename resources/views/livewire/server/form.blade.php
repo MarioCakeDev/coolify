@@ -256,65 +256,18 @@
                     </div>
                 </div>
 
-                <h2>Dns records</h2>
-                <x-modal-input :closeOutside="false" buttonTitle="+ Add" title="Add new dns record">
-                    <livewire:server.dns-record.add :server="$server" />
-                </x-modal-input>
-                <div class="flex flex-wrap gap-4 sm:flex-nowrap">
-                    <x-forms.input id="server.settings.dns_records" label="DNS Records Type" required
-                        helper="You can specify the type of DNS records to be set (e.g. A, AAAA, CNAME)." />
-                    <x-forms.input id="server.settings.dns_records_value" label="DNS Records Value" required
-                        helper="You can specify the value of the DNS records to be set." />
-
-                    <div class="w-full" x-data="{
-                        open: false,
-                        searchDnsProvider: '{{ $dns_provider_name }}',
-                        dnsProviders: @js($dns_providers),
-                        placeholder: '{{ $dns_providers ? 'Select DNS Provider' : 'Create DNS Provider...' }}',
-                        init() {
-                            this.$watch('searchDnsProvider', value => {
-                                if (value === '') {
-                                    this.open = true;
-                                }
-                            })
-                        }
-                    }">
-                        <div class="flex items-center mb-1">
-                            <label for="server.settings.dns_provider_id">DNS Provider</label>
-                            <x-helper class="ml-2" helper="DNS Provider which should be used to set DNS records." />
-                        </div>
-                        <div class="relative">
-                            <div class="inline-flex relative items-center w-64">
-                                <input autocomplete="off" wire:dirty.class.remove='dark:focus:ring-coolgray-300 dark:ring-coolgray-300'
-                                       wire:dirty.class="dark:focus:ring-warning dark:ring-warning" x-model="searchDnsProvider"
-                                       @focus="open = true" @click.away="open = false" @input="open = true" class="w-full input"
-                                       :placeholder="placeholder" :value="searchDnsProvider">
-                                <input hidden="true" wire:model.debounce.300ms="server.settings.dns_provider_id">
-                                <svg class="absolute right-0 mr-2 w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                     viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" @click="open = true">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                          d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
-                                </svg>
-                            </div>
-                            <div x-show="open"
-                                 class="overflow-auto overflow-x-hidden absolute z-50 mt-1 w-64 max-h-60 bg-white rounded-md border shadow-lg dark:bg-coolgray-100 dark:border-coolgray-200 scrollbar">
-                                <template
-                                    x-for="dns_provider in dnsProviders.filter(provider => provider.name.toLowerCase().includes(searchDnsProvider.toLowerCase()))"
-                                    :key="dns_provider.name">
-                                    <div @click="searchDnsProvider = dns_provider.name; open = false; $wire.set('server.settings.dns_provider_id', dns_provider.id)"
-                                         class="px-4 py-2 text-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-coolgray-300 dark:text-gray-200"
-                                         x-text="dns_provider.name"></div>
-                                </template>
-                            </div>
-                        </div>
-                    </div>
-
+                <div class="flex items-end gap-2">
+                    <h1>Dns records</h1>
+                    <x-modal-input :closeOutside="false" buttonTitle="+ Add" title="Add new DNS record">
+                        <livewire:server.dns-record.add :server="$server" />
+                    </x-modal-input>
                 </div>
+
                 <div class="flex flex-wrap gap-4 sm:flex-nowrap">
                     <x-forms.input id="server.settings.concurrent_builds" label="Number of concurrent builds" required
-                        helper="You can specify the number of simultaneous build processes/deployments that should run concurrently." />
+                                   helper="You can specify the number of simultaneous build processes/deployments that should run concurrently." />
                     <x-forms.input id="server.settings.dynamic_timeout" label="Deployment timeout (seconds)" required
-                        helper="You can define the maximum duration for a deployment to run before timing it out." />
+                                   helper="You can define the maximum duration for a deployment to run before timing it out." />
                 </div>
             </div>
             <div class="flex gap-2 items-center pt-4 pb-2">

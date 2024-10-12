@@ -18,12 +18,18 @@ return new class extends Migration
             $table->json('config');
         });
 
-        Schema::table('server_settings', function (Blueprint $table) {
-            $table->unsignedBigInteger('dns_provider_id')->nullable();
-            $table->foreign('dns_provider_id')
-                ->references('id')
-                ->on('dns_providers')
-                ->restrictOnDelete();
+        Schema::create('server_dns_providers', function (Blueprint $table) {
+
+            $table->foreignId('server_id')
+                ->constrained()
+                ->cascadeOnDelete();
+
+            $table->foreignId('dns_provider_id')
+                ->constrained()
+                ->cascadeOnDelete();
+
+            $table->string('dns_record_type');
+            $table->string('dns_record_value');
         });
     }
 
@@ -32,11 +38,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('server_settings', function (Blueprint $table) {
-            $table->dropForeign('server_settings_dns_provider_id_foreign');
-            $table->dropColumn('dns_provider_id');
-        });
-
+        Schema::dropIfExists('server_dns_providers');
         Schema::dropIfExists('dns_providers');
     }
 };
