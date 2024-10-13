@@ -74,48 +74,13 @@
                     <x-forms.input type="number" id="server.port" label="Port" required />
                 </div>
             </div>
-            <div class="w-full" x-data="{
-                open: false,
-                searchTimezone: '{{ $server->settings->server_timezone ?: '' }}',
-                timezones: @js($timezones),
-                placeholder: '{{ $server->settings->server_timezone ? 'Search timezone...' : 'Select Server Timezone' }}',
-                init() {
-                    this.$watch('searchTimezone', value => {
-                        if (value === '') {
-                            this.open = true;
-                        }
-                    })
-                }
-            }">
-                <div class="flex items-center mb-1">
-                    <label for="server.settings.server_timezone">Server
-                        Timezone</label>
-                    <x-helper class="ml-2" helper="Server's timezone. This is used for backups, cron jobs, etc." />
-                </div>
-                <div class="relative">
-                    <div class="inline-flex relative items-center w-64">
-                        <input autocomplete="off" wire:dirty.class.remove='dark:focus:ring-coolgray-300 dark:ring-coolgray-300'
-                            wire:dirty.class="dark:focus:ring-warning dark:ring-warning" x-model="searchTimezone"
-                            @focus="open = true" @click.away="open = false" @input="open = true" class="w-full input"
-                            :placeholder="placeholder" wire:model.debounce.300ms="server.settings.server_timezone">
-                        <svg class="absolute right-0 mr-2 w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none"
-                            viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" @click="open = true">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
-                        </svg>
-                    </div>
-                    <div x-show="open"
-                        class="overflow-auto overflow-x-hidden absolute z-50 mt-1 w-64 max-h-60 bg-white rounded-md border shadow-lg dark:bg-coolgray-100 dark:border-coolgray-200 scrollbar">
-                        <template
-                            x-for="timezone in timezones.filter(tz => tz.toLowerCase().includes(searchTimezone.toLowerCase()))"
-                            :key="timezone">
-                            <div @click="searchTimezone = timezone; open = false; $wire.set('server.settings.server_timezone', timezone)"
-                                class="px-4 py-2 text-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-coolgray-300 dark:text-gray-200"
-                                x-text="timezone"></div>
-                        </template>
-                    </div>
-                </div>
-            </div>
+            <x-forms.dropdown
+                id="server.settings.server_timezone"
+                label="Server Timezone"
+                helper="Server's timezone. This is used for backups, cron jobs, etc."
+                placeholder="{{ $server->settings->server_timezone ? 'Search timezone...' : 'Select Server Timezone' }}"
+                search="{{ $server->settings->server_timezone ?: '' }}"
+                :values="$timezones" />
 
             <div class="{{ $server->isFunctional() ? 'w-96' : 'w-full' }}">
                 @if (!$server->isLocalhost())
@@ -256,19 +221,50 @@
                     </div>
                 </div>
 
-                <div class="flex items-end gap-2">
-                    <h1>Dns records</h1>
-                    <x-modal-input :closeOutside="false" buttonTitle="+ Add" title="Add new DNS record">
-                        <livewire:server.dns-record.add :server="$server" />
-                    </x-modal-input>
-                </div>
-
                 <div class="flex flex-wrap gap-4 sm:flex-nowrap">
                     <x-forms.input id="server.settings.concurrent_builds" label="Number of concurrent builds" required
                                    helper="You can specify the number of simultaneous build processes/deployments that should run concurrently." />
                     <x-forms.input id="server.settings.dynamic_timeout" label="Deployment timeout (seconds)" required
                                    helper="You can define the maximum duration for a deployment to run before timing it out." />
                 </div>
+                <div class="flex items-end gap-2">
+                    <h2>DNS records</h2>
+                    <x-modal-input :closeOutside="false" buttonTitle="+ Add" title="Add new DNS record">
+                        <livewire:server.dns-record.add :server_id="$server->id" />
+                    </x-modal-input>
+                </div>
+
+                @if ($dns_records->count() === 0)
+                    <div>No DNS records found.</div>
+                @else
+                    @foreach ($dns_records as $dns_record)
+                        <div class="flex flex-col gap-2 w-full lg:flex-row" wire:key="{{ $dns_record->dns_record_type }}{{ $dns_record->dns_record_value }}{{ $dns_record->dns_provider_id }}">
+                            <x-forms.input label="DNS Records Type"
+                                           disabled
+                                           :value="$dns_record->dns_record_type" />
+                            <x-forms.input label="DNS Records Value"
+                                           disabled
+                                           :value="$dns_record->dns_record_value" />
+                            <x-forms.input label="DNS Provider"
+                                           disabled
+                                           :value="$dns_record->dns_provider_name" />
+
+                            <div class="flex flex-col">
+                                <div class="h-fit mt-auto">
+                                    <x-modal-confirmation
+                                        title="Confirm DNS Record Deletion?"
+                                        buttonTitle="Delete"
+                                        isErrorButton
+                                        submitAction="deleteDnsRecord({{ $dns_record->dns_record_type }}, {{ $dns_record->dns_record_value }}, {{ $dns_record->dns_provider_id }})"
+                                        :actions="['The selected DNS record will be permanently deleted.']"
+                                        :confirmWithText="false"
+                                        :confirmWithPassword="false"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                @endif
             </div>
             <div class="flex gap-2 items-center pt-4 pb-2">
                 <h3>Sentinel</h3>

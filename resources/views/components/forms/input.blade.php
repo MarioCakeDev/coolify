@@ -1,8 +1,9 @@
 <div @class([
     'flex-1' => $isMultiline,
     'w-full' => !$isMultiline,
+    'hidden' => $hidden,
 ])>
-    @if ($label)
+    @if ($label && !$hidden)
         <label class="flex gap-1 items-center mb-1 text-sm font-medium">{{ $label }}
             @if ($required)
                 <x-highlighted text="*" />
@@ -44,9 +45,9 @@
             type="{{ $type }}" @disabled($disabled)
             min="{{ $attributes->get('min') }}" max="{{ $attributes->get('max') }}"
             @if ($id !== 'null') id={{ $id }} @endif name="{{ $name }}"
-            placeholder="{{ $attributes->get('placeholder') }}">
+            placeholder="{{ $attributes->get('placeholder') }}" @if ($hidden) hidden @endif>
     @endif
-    @if (!$label && $helper)
+    @if (!$label && $helper && !$hidden)
         <x-helper :helper="$helper" />
     @endif
     @error($id)

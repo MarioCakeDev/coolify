@@ -15,6 +15,8 @@ class Button extends Component
         public bool $disabled = false,
         public bool $noStyle = false,
         public ?string $modalId = null,
+        public ?string $name = null,
+        public ?string $value = null,
         public string $defaultClass = 'button'
     ) {
         if ($this->noStyle) {

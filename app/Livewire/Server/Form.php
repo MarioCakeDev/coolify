@@ -6,8 +6,9 @@ use App\Actions\Server\StartSentinel;
 use App\Actions\Server\StopSentinel;
 use App\Jobs\DockerCleanupJob;
 use App\Jobs\PullSentinelImageJob;
-use App\Models\DnsProvider;
 use App\Models\Server;
+use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class Form extends Component
@@ -26,9 +27,7 @@ class Form extends Component
 
     public $timezones;
 
-    public $dns_providers;
-
-    public $dns_provider_name;
+    public $dns_records;
 
     public $delete_unused_volumes = false;
 
@@ -65,7 +64,6 @@ class Form extends Component
         'wildcard_domain' => 'nullable|url',
         'server.settings.is_server_api_enabled' => 'required|boolean',
         'server.settings.server_timezone' => 'required|string|timezone',
-        'server.settings.dns_provider_id' => 'string',
         'server.settings.force_docker_cleanup' => 'required|boolean',
         'server.settings.docker_cleanup_frequency' => 'required_if:server.settings.force_docker_cleanup,true|string',
         'server.settings.docker_cleanup_threshold' => 'required_if:server.settings.force_docker_cleanup,false|integer|min:1|max:100',
@@ -92,7 +90,6 @@ class Form extends Component
         'server.settings.metrics_history_days' => 'Metrics History',
         'server.settings.is_server_api_enabled' => 'Server API',
         'server.settings.server_timezone' => 'Server Timezone',
-        'server.settings.dns_provider_id' => 'DNS Provider',
         'server.settings.delete_unused_volumes' => 'Delete Unused Volumes',
         'server.settings.delete_unused_networks' => 'Delete Unused Networks',
     ];
@@ -101,15 +98,7 @@ class Form extends Component
     {
         $this->server = $server;
         $this->timezones = collect(timezone_identifiers_list())->sort()->values()->toArray();
-        $this->dns_providers = DnsProvider::all()->map(function ($dns_provider) {
-            return [
-                'id' => $dns_provider->id,
-                'name' => $dns_provider->name,
-            ];
-        });
-        $this->dns_provider_name = $this->server->settings->dns_provider_id ? $this->dns_providers->first(function ($p) {
-            return $p['id'] === $this->server->settings->dns_provider_id;
-        })['name'] : '';
+        $this->refreshDnsRecords();
         $this->wildcard_domain = $this->server->settings->wildcard_domain;
         $this->server->settings->docker_cleanup_threshold = $this->server->settings->docker_cleanup_threshold;
         $this->server->settings->docker_cleanup_frequency = $this->server->settings->docker_cleanup_frequency;
@@ -263,7 +252,6 @@ class Form extends Component
                 $this->server->settings->server_timezone = $newTimezone;
             }
 
-            $this->server->settings->dns_provider_id = $this->server->settings->dns_provider_id;
             $this->server->settings->save();
             $this->server->save();
 
@@ -278,13 +266,6 @@ class Form extends Component
         $this->server->settings->server_timezone = $value;
         $this->server->settings->save();
         $this->dispatch('success', 'Server timezone updated.');
-    }
-
-    public function updatedServerSettingsDnsProviderId($value)
-    {
-        $this->server->settings->dns_provider_id = $value;
-        $this->server->settings->save();
-        $this->dispatch('success', 'Server DNS Provider updated.');
     }
 
     public function manualCleanup()
@@ -303,5 +284,28 @@ class Form extends Component
         $this->server->settings->save();
         $this->server->refresh();
         $this->dispatch('success', 'Cloudflare Tunnels enabled.');
+    }
+
+    public function deleteDnsRecord(string $dns_record_type, string $dns_record_value, int $dns_provider_id)
+    {
+        $deletions = DB::table('server_dns_providers')
+            ->where('server_id', $this->server->id)
+            ->where('dns_record_type', $dns_record_type)
+            ->where('dns_record_value', $dns_record_value)
+            ->where('dns_provider_id', $dns_provider_id)
+            ->delete();
+
+        if ($deletions > 0) {
+            $this->dispatch('success', 'DNS record deleted successfully.');
+            $this->refreshDnsRecords();
+        } else {
+            $this->dispatch('error', 'DNS record not found.');
+        }
+    }
+
+    #[On('refresh-dns-records')]
+    public function refreshDnsRecords()
+    {
+        $this->dns_records = $this->server->getDnsRecords();
     }
 }

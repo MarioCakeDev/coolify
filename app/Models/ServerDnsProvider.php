@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Model;
 use OpenApi\Attributes as OA;
-use Spatie\SchemalessAttributes\SchemalessAttributesTrait;
 
 #[OA\Schema(
     description: 'DNS records for a server that shall be set on the DNS provider',
@@ -16,7 +16,7 @@ use Spatie\SchemalessAttributes\SchemalessAttributesTrait;
     type: 'object'
 )]
 
-class ServerDnsProvider extends BaseModel
+class ServerDnsProvider extends Model
 {
-    use SchemalessAttributesTrait;
+    protected $guarded = [];
 }

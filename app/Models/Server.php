@@ -127,6 +127,8 @@ class Server extends BaseModel
 
     protected $guarded = [];
 
+    private ?Collection $dns_records = null;
+
     public static function isReachable()
     {
         return Server::ownedByCurrentTeam()->whereRelation('settings', 'is_reachable', true);
@@ -1227,5 +1229,19 @@ $schema://$host {
     public function isIpv6(): bool
     {
         return str($this->ip)->contains(':');
+    }
+
+    public function getDnsRecords(): Collection
+    {
+        if ($this->dns_records) {
+            return collect($this->dns_records);
+        }
+
+        $this->dns_records = DB::table('server_dns_providers')->where('server_id', $this->id)
+            ->join('dns_providers', 'server_dns_providers.dns_provider_id', '=', 'dns_providers.id')
+            ->select('server_dns_providers.*', 'dns_providers.name as dns_provider_name')
+            ->get();
+
+        return collect($this->dns_records);
     }
 }

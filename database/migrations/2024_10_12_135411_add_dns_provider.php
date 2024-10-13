@@ -19,7 +19,6 @@ return new class extends Migration
         });
 
         Schema::create('server_dns_providers', function (Blueprint $table) {
-
             $table->foreignId('server_id')
                 ->constrained()
                 ->cascadeOnDelete();
@@ -30,6 +29,8 @@ return new class extends Migration
 
             $table->string('dns_record_type');
             $table->string('dns_record_value');
+
+            $table->primary(['server_id', 'dns_provider_id', 'dns_record_type', 'dns_record_value']);
         });
     }
 

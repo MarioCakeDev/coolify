@@ -19,18 +19,51 @@ class Dropdown extends Component
         public string $placeholder = '',
         public string $helper = 'Select...',
         public bool $required = false,
-    ) {}
+    ) {
+        $this->values = iterator_to_array($this->normalizedValues());
+    }
 
     public function render(): View|Closure|string
     {
-        return view('components.forms.dropdown', [
-            'placeholder' => $this->placeholder,
-            'label' => $this->label,
-            'id' => $this->id,
-            'helper' => $this->helper,
-            'values' => $this->values,
-            'search' => $this->search,
-            'required' => $this->required,
-        ]);
+        return view('components.forms.dropdown');
+    }
+
+    private function normalizedValues(): iterable
+    {
+        $nameKey = 'name';
+        $idKey = 'id';
+
+        foreach ($this->values as $value) {
+            if (is_null($value)) {
+                continue;
+            }
+
+            if (! is_array($value)) {
+                yield [
+                    $nameKey => $value,
+                    $idKey => $value,
+                ];
+
+                continue;
+            }
+
+            $has_name = array_key_exists($nameKey, $value);
+            $has_id = array_key_exists($idKey, $value);
+            if ($has_name && ! $has_id) {
+                yield [
+                    $nameKey => $value[$nameKey],
+                    $idKey => $value[$nameKey],
+                ];
+            }
+            if ($has_id && ! $has_name) {
+                yield [
+                    $nameKey => $value[$idKey],
+                    $idKey => $value[$idKey],
+                ];
+            }
+            if ($has_name && $has_id) {
+                yield $value;
+            }
+        }
     }
 }
